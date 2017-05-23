@@ -1,0 +1,47 @@
+Setting up Raspberry-Pi
+
+1) Installing Raspbian OS onto the board by normal start,
+	* Connect to an external monitor using HDMI cable, connect to an usb mouse and keyboard.
+	* The board should be having the micro-sd card (mine came with Noobs pre-installed).
+	* Noobs (New Out Of the Box Software) is an easy operating system installer which contains Raspbian OS along with others.
+	* Select the OS you need and click install (The install will take several minutes)
+
+2) Once the installation is done login to the Pi desktop, connect to the internet and do a "apt-get update".
+
+3) From now on we dont need to have an external monitors, mouse or keyboard. We can login using Headless start by doing a ssh into the pi from a laptop.
++++++++++++++
+4) For doing this, I would suggest setting a static IP to the pi.
+	* Plug the micro-sd card using a card reader into your laptop.
+	* Start by editing the dhcpcd.conf file (dhcp client daemon) in the Pi's filesystem (Please take a back-up of the file before editing),
+		"sudo nano /etc/dhcpcd.conf"
+	* Append the following at the end of the file (Modify the IP according to your router's subnet),
+		
+		#For using the ethernet
+
+		interface eth0  
+
+		static ip_address=192.168.0.100/24
+		static routers=192.168.0.1
+		static domain_name_servers=192.168.0.1
+	
+		#For using the wifi
+
+		interface wlan0
+
+		static ip_address=192.168.0.200/24
+		static routers=192.168.0.1
+		static domain_name_servers=192.168.0.1
+
+	* Now, the Pi's wifi interface is having the IP "192.168.0.200" and ethernet is having the IP "192.168.0.100".
+
+5) Create a empty txt file and name it as "ssh" and put it in the boot folder of the Pi. This is done to enable the ssh in the pi.
+
+6) Now put the micro-sd card back into your Pi and give the power supply.
+
+7) From your laptop, if connecting thru wifi,(same goes for ethernet)
+	* ssh into your pi using "ssh pi@192.168.0.200"
+	* usually the password will be "raspberry".
+
+Voila!!
+
+
