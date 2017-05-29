@@ -1,0 +1,10 @@
+# dnsmasq is a lightweight DNS, TFTP, PXE, router advertisement and DHCP server. It is intended to provide coupled DNS and DHCP service to a LAN.
+Dnsmasq accepts DNS queries and either answers them from a small, local, cache or forwards them to a real, recursive, DNS server. It loads the contents of /etc/hosts so that local hostnames which do not appear in the global DNS can be resolved and also answers DNS queries for DHCP configured hosts.
+##############################################################
+		config-template
+#############################################################
+no-resolv 
+server=_DNS_SERVER
+interface=lo,_IFACE
+no-dhcp-interface=lo
+dhcp-range=_SUBNET_FIRST,_SUBNET_END,255.255.255.0,12h
