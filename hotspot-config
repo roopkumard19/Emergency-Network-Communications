@@ -1,4 +1,4 @@
-SSID="Docker"
-PASSPHRASE="docker123"
+SSID="Test"
+PASSPHRASE="test123"
 HW_MODE=g
 CHANNEL=1
