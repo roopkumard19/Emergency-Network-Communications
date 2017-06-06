@@ -1,0 +1,141 @@
+* For making a interface act as an access point we need to install and configure hostapd and dnsmasq(or dhcpd).
+
+
+HOSTAPD
+
+“hostapd is a user space daemon for access point and authentication servers. “
+
+* In simple words, hostapd allows you to create software wifi access points allowing configuration options. 
+
+
+REQUIREMENTS
+
+*Supported Wireless Card
+*An internet connection you want to share. (optional)
+*A linux distro
+
+
+CHECKING WIFI CARD SUPPORT
+
+* To check what kernel driver is in use for your wireless card, type the follwing in the terminal,
+
+sudo lshw -c network | grep -A 12 <interface-keyword>
+
+eg., sudo lshw -c network | grep -A 12 "Wireless"
+
+
+and check for the kernel driver in use. My laptop output,
+
+description: Wireless interface
+product: Qualcomm Atheros
+vendor: Qualcomm Atheros
+physical id: 0
+bus info: pci@0000:03:00.0
+logical name: wlp3s0
+version: 31
+serial: 74:df:bf:8c:12:69
+width: 64 bits
+clock: 33MHz
+capabilities: pm msi pciexpress bus_master cap_list ethernet physical wireless
+configuration: broadcast=yes driver=ath10k_pci driverversion=4.9.0-040900-generic firmware=WLAN.TF.1.0-00267-1 ip=192.168.0.22 latency=0 link=yes multicast=yes wireless=IEEE 802.11
+resources: irq:132 memory:94200000-943fffff
+
+my driver is ath10k_pci.
+
+* Now to get the interface details of the wireless driver,
+
+modinfo ath10k_pci | grep 'depend'
+
+* if the output conains cfg80211 or mac80211, then hostapd supports your driver.
+
+
+INSTALLING HOSTAPD
+
+sudo  apt-get update && sudo apt-get install hostapd
+
+* Here is my complete /etc/hostapd/hostapd.conf with WPA authentication options,
+
+interface=wlan1
+driver=nl80211
+ssid=test
+hw_mode=g
+channel=6
+macaddr_acl=0
+ignore_broadcast_ssid=0
+auth_algs=1
+wpa=3
+wpa_passphrase=test1234
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+wep_default_key=0
+wep_key0=qwert
+
+
+* Installing Dnsmasq,
+
+sudo apt-get install dnsmasq
+
+* Configuring dnsmasq
+
+The main reason I am recommending dnsmasq over dhcpd is the ease in configuring it.
+
+Just append the following to the /etc/dnsmasq.conf,
+
+
+no-resolv
+# Interface to bind to
+interface=wlan0
+dhcp-range=10.0.0.3,10.0.0.20,12h
+server=8.8.8.8
+server=8.8.4.4
+
+
+* The final step is to enable NAT to share internet in one network interface  with the clients connected through hostapd. Lets create a bash script to automate the process and name it as "initAP.sh"
+
+
+#!/bin/bash
+#Initial wifi interface configuration
+ifconfig $1 up 10.0.0.1 netmask 255.255.255.0
+sleep 2
+ 
+###########Start dnsmasq, modify if required##########
+if [ -z "$(ps -e | grep dnsmasq)" ]
+then
+ dnsmasq
+fi
+###########
+ 
+#Enable NAT
+iptables --flush
+iptables --table nat --flush
+iptables --delete-chain
+iptables --table nat --delete-chain
+iptables --table nat --append POSTROUTING --out-interface $2 -j MASQUERADE
+iptables --append FORWARD --in-interface $1 -j ACCEPT
+ 
+sysctl -w net.ipv4.ip_forward=1
+ 
+#start hostapd
+hostapd /etc/hostapd/hostapd.conf 1> /dev/null
+killall dnsmasq
+
+
+* Make this file executable, 
+
+
+chmod +x initAP.sh
+
+
+* Run it, the syntax for executing it is
+
+
+./initAP.sh wifi_card_interface interface_with_internet
+
+
+eg.,
+
+./initAP.sh wlan1 wlan0
+
+
+In the above example, wlan0 is my interface with internet and wlan1 is the interface I want to make as a access point.
