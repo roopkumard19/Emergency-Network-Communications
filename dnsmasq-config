@@ -1,5 +1,6 @@
-no-resolv 
-server=_DNS_SERVER
-interface=lo,_IFACE
-no-dhcp-interface=lo
-dhcp-range=_SUBNET_FIRST,_SUBNET_END,255.255.255.0,12h
+no-resolv
+# Interface to bind to
+interface=wlan0
+dhcp-range=10.0.0.3,10.0.0.20,12h
+server=8.8.8.8
+server=8.8.4.4
